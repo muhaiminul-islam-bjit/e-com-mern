@@ -34,11 +34,18 @@ app.use((req, res, next) => {
 });
 
 // eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) =>
-  errorResponse(res, {
+app.use((err, req, res, next) => {
+  if (err.name === 'TokenExpiredError') {
+    return errorResponse(res, {
+      statusCode: 401,
+      message: 'Token expired',
+    });
+  }
+
+  return errorResponse(res, {
     statusCode: err.status,
     message: err.message,
-  })
-);
+  });
+});
 
 module.exports = app;

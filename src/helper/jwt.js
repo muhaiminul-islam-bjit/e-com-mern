@@ -1,4 +1,3 @@
-const createHttpError = require('http-errors');
 const jwt = require('jsonwebtoken');
 
 const createToken = (payload, secrecKey, expiresIn) => {
@@ -20,13 +19,8 @@ const createToken = (payload, secrecKey, expiresIn) => {
 };
 
 const verifyToken = (token, secrecKey) => {
-  try {
-    const decoded = jwt.verify(token, secrecKey);
-    return decoded;
-  } catch (error) {
-    console.error(error.name);
-    throw error;
-  }
+  const decoded = jwt.verify(token, secrecKey);
+  return decoded;
 };
 
 module.exports = { createToken, verifyToken };
