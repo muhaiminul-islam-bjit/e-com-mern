@@ -1,8 +1,10 @@
 const createHttpError = require('http-errors');
+const User = require('../models/userModel');
 const { successResponse } = require('./utils/response');
 const { getById, deleteById } = require('../services/repository');
-const User = require('../models/userModel');
 const { deleteImage } = require('../helper/image');
+const { createToken, verifyToken } = require('../helper/jwt');
+const { sendEmail } = require('../helper/email');
 
 async function getUsers(req, res, next) {
   try {
@@ -86,7 +88,6 @@ const deleteUser = async (req, res, next) => {
 const processRegister = async (req, res, next) => {
   try {
     const { name, email, phone, password, address } = req.body;
-    const newUser = { name, email, phone, password, address };
 
     const userExist = await User.exists({ email });
 
@@ -94,10 +95,55 @@ const processRegister = async (req, res, next) => {
       throw createHttpError(409, 'Email already exist');
     }
 
+    const token = createToken({ name, email, phone, password, address }, process.env.JWT_ACTIVATION_KEY, '10m');
+
+    const emailData = {
+      email,
+      subject: 'Account Activation Email',
+      html: `
+      <h2>Hello ${name} !</h2>
+      <p>Please click here to <a href="${process.env.CLIENT_URL}/api/users/activate/${token}" target="_blank">activate your account</a></p>
+      `,
+    };
+
+    try {
+      await sendEmail(emailData);
+    } catch (error) {
+      return next(createHttpError(500, 'Failed to send verification email'));
+    }
+
     return successResponse(res, {
       statusCode: 200,
-      message: 'User created successfully',
-      payload: { newUser },
+      message: `Please go to your ${email} for completing your registration process`,
+      payload: { token },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const verifyUserAccount = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) throw createHttpError(404, 'Token not found');
+
+    const decoded = verifyToken(token, process.env.JWT_ACTIVATION_KEY);
+
+    if (!decoded) throw createHttpError(401, 'Unable to verify user');
+
+    const userExist = await User.exists({ email: decoded.email });
+
+    if (userExist) {
+      throw createHttpError(409, 'Email already exist');
+    }
+
+    const user = await User.create(decoded);
+
+    return successResponse(res, {
+      statusCode: 201,
+      message: 'User registered successfully',
+      payload: { user },
     });
   } catch (error) {
     return next(error);
@@ -109,4 +155,5 @@ module.exports = {
   getUser,
   deleteUser,
   processRegister,
+  verifyUserAccount,
 };

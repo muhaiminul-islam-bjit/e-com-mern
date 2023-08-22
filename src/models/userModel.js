@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { Schema, model } = require('mongoose');
 
 const userSchema = new Schema(
@@ -23,7 +23,7 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, 'User name is required'],
+      required: [true, 'Password is required'],
       minlength: [4, 'Length of password minimum 3 characters'],
       set: v => bcrypt.hashSync(v, bcrypt.genSaltSync(10)),
     },
