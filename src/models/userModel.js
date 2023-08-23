@@ -28,8 +28,9 @@ const userSchema = new Schema(
       set: v => bcrypt.hashSync(v, bcrypt.genSaltSync(10)),
     },
     image: {
-      type: String,
-      default: process.env.PLACEHOLDER_IMAGE_USER || 'public/images/users/placeholder-user.jpeg',
+      type: Buffer,
+      contentType: String,
+      required: [true, 'User image is required'],
     },
     address: {
       type: String,

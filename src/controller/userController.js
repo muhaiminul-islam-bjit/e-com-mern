@@ -4,7 +4,9 @@ const { successResponse } = require('./utils/response');
 const { getById, deleteById } = require('../services/repository');
 const { deleteImage } = require('../helper/image');
 const { createToken, verifyToken } = require('../helper/jwt');
-const { sendEmail } = require('../helper/email');
+const { options } = require('../routers/userRouter');
+const { MAX_FILE_SIZE } = require('../config/image');
+// const { sendEmail } = require('../helper/email');
 
 async function getUsers(req, res, next) {
   try {
@@ -95,8 +97,19 @@ const processRegister = async (req, res, next) => {
       throw createHttpError(409, 'Email already exist');
     }
 
-    const token = createToken({ name, email, phone, password, address }, process.env.JWT_ACTIVATION_KEY, '10m');
+    if (!req.file) {
+      throw createHttpError(409, 'Image is required');
+    }
 
+    if (req.file.size > MAX_FILE_SIZE) {
+      throw createHttpError(400, 'File too large');
+    }
+
+    const imageBufferString = req.file.buffer.toString('base64');
+
+    const token = createToken({ name, email, phone, password, address, imageBufferString }, process.env.JWT_ACTIVATION_KEY, '10m');
+
+    // eslint-disable-next-line no-unused-vars
     const emailData2 = {
       email,
       subject: 'Account Activation Email',
@@ -150,10 +163,61 @@ const verifyUserAccount = async (req, res, next) => {
   }
 };
 
+const updateUser = async (req, res, next) => {
+  const { id } = req.params;
+  const updateOption = { new: true, runValidators: true, context: 'query' };
+  const user = await getById(id, User, updateOption);
+  const updates = {};
+
+  if (req.body.name) {
+    updates.name = req.body.name;
+  }
+
+  if (req.body.password) {
+    updates.password = req.body.password;
+  }
+
+  if (req.body.phone) {
+    updates.phone = req.body.phone;
+  }
+
+  if (req.body.address) {
+    updates.address = req.body.address;
+  }
+
+  for (const key in req.body) {
+    if (['name', 'password', 'phone', 'address'].includes(key)) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  const image = req.file;
+  if (image) {
+    if (image.size > MAX_FILE_SIZE) {
+      throw createHttpError(400, 'File too large');
+    }
+
+    updates.image = image.buffer.toString('base64');
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(id, updates, updateOption);
+
+  if (!updatedUser) {
+    throw createHttpError(404, 'User with this id does not exist');
+  }
+
+  return successResponse(res, {
+    statusCode: 200,
+    message: 'User updated successfully',
+    payload: { updatedUser },
+  });
+};
+
 module.exports = {
   getUsers,
   getUser,
   deleteUser,
   processRegister,
   verifyUserAccount,
+  updateUser,
 };

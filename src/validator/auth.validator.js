@@ -6,7 +6,15 @@ const validateUserRegistration = [
   body('password').trim().notEmpty().withMessage('Password is required').isLength({ min: 6 }).withMessage('Password should be at leat 6 characters long'),
   body('address').notEmpty().withMessage('Address is required'),
   body('phone').trim().notEmpty().withMessage('Phone is required'),
-  body('image').optional().isString(),
+  body('image')
+    .custom((value, { req }) => {
+      if (!req.file || !req.file.buffer) {
+        throw new Error('User image is required');
+      }
+
+      return true;
+    })
+    .withMessage('User image is required'),
 ];
 
 module.exports = { validateUserRegistration };
