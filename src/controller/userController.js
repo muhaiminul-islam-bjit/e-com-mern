@@ -97,7 +97,7 @@ const processRegister = async (req, res, next) => {
 
     const token = createToken({ name, email, phone, password, address }, process.env.JWT_ACTIVATION_KEY, '10m');
 
-    const emailData = {
+    const emailData2 = {
       email,
       subject: 'Account Activation Email',
       html: `
