@@ -107,7 +107,7 @@ const processRegister = async (req, res, next) => {
     };
 
     try {
-      await sendEmail(emailData);
+      // await sendEmail(emailData);
     } catch (error) {
       return next(createHttpError(500, 'Failed to send verification email'));
     }
@@ -115,7 +115,7 @@ const processRegister = async (req, res, next) => {
     return successResponse(res, {
       statusCode: 200,
       message: `Please go to your ${email} for completing your registration process`,
-      payload: { token },
+      payload: { name },
     });
   } catch (error) {
     return next(error);
