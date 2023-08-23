@@ -8,7 +8,8 @@
     "lint": "eslint --fix ./src/*.js",
     "start": "node ./src/server.js",
     "dev": "nodemon ./src/server.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
   },
   "keywords": [
     "ecommerce",
@@ -41,7 +42,7 @@
     "prettier": "^3.0.2"
   },
   "lint-staged": {
-    "src/*.{js,jsx,ts,tsx,json}": [
+    "src/*.{js,json}": [
       "eslint --fix"
     ]
   }
