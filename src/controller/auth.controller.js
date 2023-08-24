@@ -26,7 +26,6 @@ const httpLogin = async (req, res, next) => {
       secure: true,
       sameSite: 'none',
     });
-    let hello;
 
     return successResponse(res, {
       statusCode: 200,
