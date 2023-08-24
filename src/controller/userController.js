@@ -4,9 +4,8 @@ const { successResponse } = require('./utils/response');
 const { getById, deleteById } = require('../services/repository');
 const { deleteImage } = require('../helper/image');
 const { createToken, verifyToken } = require('../helper/jwt');
-const { options } = require('../routers/userRouter');
 const { MAX_FILE_SIZE } = require('../config/image');
-// const { sendEmail } = require('../helper/email');
+const { sendEmail } = require('../helper/email');
 
 async function getUsers(req, res, next) {
   try {
@@ -110,7 +109,7 @@ const processRegister = async (req, res, next) => {
     const token = createToken({ name, email, phone, password, address, imageBufferString }, process.env.JWT_ACTIVATION_KEY, '10m');
 
     // eslint-disable-next-line no-unused-vars
-    const emailData2 = {
+    const emailData = {
       email,
       subject: 'Account Activation Email',
       html: `
@@ -120,7 +119,7 @@ const processRegister = async (req, res, next) => {
     };
 
     try {
-      // await sendEmail(emailData);
+      await sendEmail(emailData);
     } catch (error) {
       return next(createHttpError(500, 'Failed to send verification email'));
     }
@@ -163,33 +162,25 @@ const verifyUserAccount = async (req, res, next) => {
   }
 };
 
-const updateUser = async (req, res, next) => {
+const updateUser = async (req, res) => {
   const { id } = req.params;
   const updateOption = { new: true, runValidators: true, context: 'query' };
-  const user = await getById(id, User, updateOption);
+  await getById(id, User, updateOption);
   const updates = {};
 
-  if (req.body.name) {
-    updates.name = req.body.name;
-  }
+  // for (const key in req.body) {
+  //   if (['name', 'password', 'phone', 'address'].includes(key)) {
+  //     updates[key] = req.body[key];
+  //   }
+  // }
 
-  if (req.body.password) {
-    updates.password = req.body.password;
-  }
+  console.log(Object.keys(req.body));
 
-  if (req.body.phone) {
-    updates.phone = req.body.phone;
-  }
-
-  if (req.body.address) {
-    updates.address = req.body.address;
-  }
-
-  for (const key in req.body) {
+  Object.keys(req.body).forEach(key => {
     if (['name', 'password', 'phone', 'address'].includes(key)) {
       updates[key] = req.body[key];
     }
-  }
+  });
 
   const image = req.file;
   if (image) {
@@ -200,7 +191,7 @@ const updateUser = async (req, res, next) => {
     updates.image = image.buffer.toString('base64');
   }
 
-  const updatedUser = await User.findByIdAndUpdate(id, updates, updateOption);
+  const updatedUser = await User.findByIdAndUpdate(id, updates, updateOption).select(['-password', '-image']);
 
   if (!updatedUser) {
     throw createHttpError(404, 'User with this id does not exist');

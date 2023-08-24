@@ -13,6 +13,18 @@ const getById = async (id, Model, options = {}) => {
   }
 };
 
+const getByQuery = async (Model, query) => {
+  try {
+    const item = await Model.findOne(query);
+    if (!item) throw createHttpError(404, `${Model.modelName} not found.`);
+
+    return item;
+  } catch (error) {
+    if (error instanceof mongoose.Error) throw createHttpError(400, 'Invalid User id');
+    throw error;
+  }
+};
+
 const deleteById = async (id, Model) => {
   try {
     const item = await Model.deleteOne({ _id: id });
@@ -25,4 +37,4 @@ const deleteById = async (id, Model) => {
   }
 };
 
-module.exports = { getById, deleteById };
+module.exports = { getById, getByQuery, deleteById };
