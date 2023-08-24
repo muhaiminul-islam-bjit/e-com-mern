@@ -19,7 +19,8 @@ const httpLogin = async (req, res, next) => {
       throw createHttpError(403, 'You are banned. Please contact with authority');
     }
 
-    const accessToken = createToken({}, process.env.JWT_ACCESS_KEY, '10m');
+    // eslint-disable-next-line no-underscore-dangle
+    const accessToken = createToken({ id: user._id }, process.env.JWT_ACCESS_KEY, '10m');
     res.cookie('access_token', accessToken, {
       maxAge: 15 * 60 * 1000,
       httpOnly: true,

@@ -19,6 +19,10 @@ const verifyToken = (token, secrecKey) => {
     const decoded = jwt.verify(token, secrecKey);
     return decoded;
   } catch (error) {
+    console.log(error.name);
+    if (error.name === 'JsonWebTokenError') {
+      throw createHttpError(422, 'Invalid token');
+    }
     throw createHttpError(422, 'Token expired');
   }
 };
