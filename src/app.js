@@ -19,7 +19,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/v1/api', api);
 
 api.get('/v1/api/test', (req, res) => {
-  console.log('hello');
   res.status(200).send({
     message: 'api is working fine',
   });
@@ -30,18 +29,11 @@ app.use((req, res, next) => {
 });
 
 // eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  if (err.name === 'TokenExpiredError') {
-    return errorResponse(res, {
-      statusCode: 401,
-      message: 'Token expired',
-    });
-  }
-
-  return errorResponse(res, {
+app.use((err, req, res, next) =>
+  errorResponse(res, {
     statusCode: err.status,
     message: err.message,
-  });
-});
+  })
+);
 
 module.exports = app;

@@ -1,3 +1,4 @@
+const createHttpError = require('http-errors');
 const jwt = require('jsonwebtoken');
 
 const createToken = (payload, secrecKey, expiresIn) => {
@@ -9,18 +10,17 @@ const createToken = (payload, secrecKey, expiresIn) => {
     throw new Error('Secret key must be a non-empty string');
   }
 
-  try {
-    const token = jwt.sign(payload, secrecKey, { expiresIn });
-    return token;
-  } catch (error) {
-    console.error('Failed to sign the JWT: ', error);
-    throw error;
-  }
+  const token = jwt.sign(payload, secrecKey, { expiresIn });
+  return token;
 };
 
 const verifyToken = (token, secrecKey) => {
-  const decoded = jwt.verify(token, secrecKey);
-  return decoded;
+  try {
+    const decoded = jwt.verify(token, secrecKey);
+    return decoded;
+  } catch (error) {
+    throw createHttpError(422, 'Token expired');
+  }
 };
 
 module.exports = { createToken, verifyToken };

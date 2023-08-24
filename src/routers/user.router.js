@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, getUser, deleteUser, processRegister, verifyUserAccount, updateUser } = require('../controller/userController');
+const { getUsers, getUser, deleteUser, processRegister, verifyUserAccount, updateUser } = require('../controller/user.controller');
 const upload = require('../middlewares/uploadFiles');
 const { validateUserRegistration } = require('../validator/auth.validator');
 const runValidation = require('../validator');

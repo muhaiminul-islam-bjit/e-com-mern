@@ -1,5 +1,5 @@
 const createHttpError = require('http-errors');
-const User = require('../models/userModel');
+const User = require('../models/user.model');
 const { successResponse } = require('./utils/response');
 const { getById, deleteById } = require('../services/repository');
 const { deleteImage } = require('../helper/image');
@@ -108,7 +108,6 @@ const processRegister = async (req, res, next) => {
 
     const token = createToken({ name, email, phone, password, address, imageBufferString }, process.env.JWT_ACTIVATION_KEY, '10m');
 
-    // eslint-disable-next-line no-unused-vars
     const emailData = {
       email,
       subject: 'Account Activation Email',
@@ -162,46 +161,42 @@ const verifyUserAccount = async (req, res, next) => {
   }
 };
 
-const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const updateOption = { new: true, runValidators: true, context: 'query' };
-  await getById(id, User, updateOption);
-  const updates = {};
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updateOption = { new: true, runValidators: true, context: 'query' };
+    await getById(id, User, updateOption);
+    const updates = {};
 
-  // for (const key in req.body) {
-  //   if (['name', 'password', 'phone', 'address'].includes(key)) {
-  //     updates[key] = req.body[key];
-  //   }
-  // }
+    Object.keys(req.body).forEach(key => {
+      if (['name', 'password', 'phone', 'address'].includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
 
-  console.log(Object.keys(req.body));
+    const image = req.file;
+    if (image) {
+      if (image.size > MAX_FILE_SIZE) {
+        throw createHttpError(400, 'File too large');
+      }
 
-  Object.keys(req.body).forEach(key => {
-    if (['name', 'password', 'phone', 'address'].includes(key)) {
-      updates[key] = req.body[key];
-    }
-  });
-
-  const image = req.file;
-  if (image) {
-    if (image.size > MAX_FILE_SIZE) {
-      throw createHttpError(400, 'File too large');
+      updates.image = image.buffer.toString('base64');
     }
 
-    updates.image = image.buffer.toString('base64');
+    const updatedUser = await User.findByIdAndUpdate(id, updates, updateOption).select(['-password', '-image']);
+
+    if (!updatedUser) {
+      throw createHttpError(404, 'User with this id does not exist');
+    }
+
+    return successResponse(res, {
+      statusCode: 200,
+      message: 'User updated successfully',
+      payload: { updatedUser },
+    });
+  } catch (error) {
+    return next(error);
   }
-
-  const updatedUser = await User.findByIdAndUpdate(id, updates, updateOption).select(['-password', '-image']);
-
-  if (!updatedUser) {
-    throw createHttpError(404, 'User with this id does not exist');
-  }
-
-  return successResponse(res, {
-    statusCode: 200,
-    message: 'User updated successfully',
-    payload: { updatedUser },
-  });
 };
 
 module.exports = {

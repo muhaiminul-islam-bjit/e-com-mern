@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const createHttpError = require('http-errors');
 const { getByQuery } = require('../services/repository');
-const User = require('../models/userModel');
+const User = require('../models/user.model');
 const { successResponse } = require('./utils/response');
 const { createToken } = require('../helper/jwt');
 
@@ -37,6 +37,19 @@ const httpLogin = async (req, res, next) => {
   }
 };
 
+const httpLogout = async (req, res, next) => {
+  try {
+    res.clearCookie('access_token');
+    return successResponse(res, {
+      statusCode: 200,
+      message: 'User logged out successfully',
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   httpLogin,
+  httpLogout,
 };
