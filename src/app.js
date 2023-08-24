@@ -1,6 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
-// const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const createError = require('http-errors');
 const { api } = require('./routers/api.router');
@@ -11,7 +11,7 @@ const { rateLimiter } = require('./config/global');
 const app = express();
 
 app.use(morgan('dev'));
-// app.use(cookieParser);
+app.use(cookieParser());
 app.use(rateLimiter);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
