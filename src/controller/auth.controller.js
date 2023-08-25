@@ -8,7 +8,8 @@ const { createToken } = require('../helper/jwt');
 const httpLogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await getByQuery(User, { email });
+    const options = { image: 0 };
+    const user = await getByQuery(User, { email }, options);
     const isPasswordMatch = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatch) {
@@ -19,8 +20,7 @@ const httpLogin = async (req, res, next) => {
       throw createHttpError(403, 'You are banned. Please contact with authority');
     }
 
-    // eslint-disable-next-line no-underscore-dangle
-    const accessToken = createToken({ id: user._id }, process.env.JWT_ACCESS_KEY, '10m');
+    const accessToken = createToken({ user }, process.env.JWT_ACCESS_KEY, '15m');
     res.cookie('access_token', accessToken, {
       maxAge: 15 * 60 * 1000,
       httpOnly: true,

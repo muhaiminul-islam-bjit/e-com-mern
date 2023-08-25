@@ -13,9 +13,9 @@ const getById = async (id, Model, options = {}) => {
   }
 };
 
-const getByQuery = async (Model, query) => {
+const getByQuery = async (Model, query, options = {}) => {
   try {
-    const item = await Model.findOne(query);
+    const item = await Model.findOne(query, options);
     if (!item) throw createHttpError(404, `${Model.modelName} not found.`);
 
     return item;

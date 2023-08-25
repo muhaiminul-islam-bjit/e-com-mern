@@ -28,5 +28,6 @@ module.exports = {
     'import/prefer-default-export': 0,
     'import/first': 0,
     'import/no-dynamic-require': 0,
+    'no-underscore-dangle': 'off',
   },
 };
